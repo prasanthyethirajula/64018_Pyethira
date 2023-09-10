@@ -1,0 +1,119 @@
+---
+Title: QMM ASSIGNMENT-2
+Author: Prasanth Yethirajula
+output:
+  pdf_document: default
+  html_document: default
+---
+Question 1:
+
+
+**Decision Variables:**
+\(x\) = Number of Collegiate backpacks to produce per week.
+\(y\) = Number of Mini backpacks to produce per week.
+
+**Objective Function:**
+Maximize \(Z = 32x + 24y\)
+
+**Constraints:**
+1. Material constraint: \(3x + 2y \leq 5000\)
+2. Sales forecast constraint for Collegiate: \(x \leq 1000\)
+3. Sales forecast constraint for Mini: \(y \leq 1200\)
+4. Labor constraint: \(45x + 40y \leq 35 \times 40 \times 60\)
+
+**Non-negativity constraints:**
+\(x \geq 0\)
+\(y \geq 0\)
+
+Linear Programming model as :
+$$Max\hspace{.1cm}Z\hspace{.2cm}=\hspace{.2cm}32b_c+24b_m$$
+#tried solving the problem using LP model by defining the coeficients and 
+#installing lpsolve and using library lpsolve.
+```{r}
+# Load the lpSolve library
+library(lpSolve)
+
+# Define the objective coefficients
+obj_coef <- c(32, 24)
+
+# Define the constraint coefficients and types
+const_coef <- matrix(c(3, 2, 45, 40), nrow = 2, byrow = TRUE)
+const_dir <- c("<=", "<=")
+
+# Define the right-hand side of constraints
+rhs <- c(5000, 35 * 40 * 60)  # Material and labor constraints
+
+# Create an LP model
+lp_model <- lp("max", obj_coef, const_coef, const_dir, rhs)
+
+# Add variable bounds as constraints
+var_bounds <- matrix(c(0, 1000, 0, 1200), nrow = 2, byrow = TRUE)
+colnames(var_bounds) <- c("Collegiate", "Mini")
+rownames(var_bounds) <- c("Lower", "Upper")
+
+# Add variable bounds as constraints
+const_coef_bounds <- rbind(const_coef, diag(2))  # Adding bounds as constraints
+const_dir_bounds <- c(const_dir, "<=", "<=")
+rhs_bounds <- c(rhs, c(0, 1000, 0, 1200))
+
+# Solve the LP problem
+solution <- lp("max", obj_coef, const_coef_bounds, const_dir_bounds, rhs_bounds)
+
+# Print the results
+cat("Number of Collegiate backpacks to produce per week:", solution$solution[1], "\n")
+cat("Number of Mini backpacks to produce per week:", solution$solution[2], "\n")
+cat("Optimal profit:", solution$objval, "\n")
+
+```
+
+
+Question 2
+
+```{r}
+#defining the matrix to table
+table=matrix(c(20,900,420,15,1200,360,12,750,300), nrow = 3, ncol = 3, byrow = TRUE)
+#Assigning colnames and row names
+colnames<-(c('Space Required', 'Sales Forecast(PerDay)', 'Profit'))
+rownames<-(c('Large', 'Medium','Small'))
+table
+```
+
+``` {r}
+#Second matrix
+table=matrix(c(750,900,450), nrow = 3, ncol = 1, byrow = TRUE)
+#Assigning colnames and rownames
+colnames<-(c('Excess Capacity Units/Day'))
+rownames<-(c('Plant1', 'Plant2','Plant3'))
+table
+```
+Suppose,
+Assume Size of the large product $$=L$$
+Assume Size of the medium product $$=M$$
+Assume size of the small product $$=S$$
+Plant1 is assignes as $$=P1$$
+Plant2 is assignes as $$=P2$$
+Plant3 is assignes as $$=P3$$
+
+(a) Decision Variables for the problem:$$L,M,S,P1,P2\hspace{.1cm}and\hspace{.1cm}P3$$
+(b) Objective Function:
+$$Max\hspace{.1cm}Z\hspace{.1cm}=\hspace{.1cm}420(P1L+P2L+P3L)+360(P1M+P2M+P3M)+300(P1S+P2S+P3S)$$
+(c) Constraints:
+1. Storage capacity (sq ft.): $$20P1L+15P1M+12P1S\le13000$$
+                              $$20P2L+15P2M+12P2S\le12000$$
+                              $$20P3L+15P3M+12P3S\le5000$$
+2. Excess Capacity Storage:   $$P1L+P1M+P1S\le750$$
+                              $$P2L+P2M+P2S\le900$$
+                              $$P3L+P3M+P3S\le450$$
+3. Sales forecast per day for every product:
+        For Large             $$P1L+P2L+P3L=900$$
+        For Medium            $$P1M+P2M+P3M=1200$$
+        For Small             $$P1S+P2S+P3S=750$$
+4. Same Percentage of their excess capacity is being used:
+                              $$1/750(P1L+P1M+P1S)=1/900(P2L+P2M+P2S)$$
+                              $$1/750(P1L+P1M+P1S)=1/450(P3L+P3M+P3S)$$
+5. Non-negativity:            $$L\ge0$$
+                              $$M\ge0$$
+                              $$S\ge0$$
+                              $$P_1\ge0$$
+                              $$P_2\ge0$$
+                              $$P_3\ge0$$
