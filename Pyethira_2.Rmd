@@ -1,0 +1,125 @@
+---
+title: "Pyethira_2"
+Author: Prasanth Yethirajula
+date: "2023-09-24"
+output:
+  pdf_document: default
+  html_document: default
+---
+***
+
+The decision variables are:
+
+For the quantities produced at Plant 1:
+
+L1: L1 is the no.of units of the Large size product
+
+M1: M1 is the no.of units of the Medium size product
+
+S1: S1 is the no.of units of the Small size product
+
+For the quantities produced at Plant 2:
+
+L2: L2 is the no.of units of the Large size product
+
+M2: M2 is the no.of units of the Medium size product
+
+S2: S2 is the no.of units of the Small size product
+
+For the quantities produced at Plant 3:
+
+L3: L3 is the no.of units of the Large size product
+
+M3: M3 is the no.of units of the Medium size product
+
+S3: S3 is the no.of units of the Small size product
+
+**Formulation of LP problem**
+$$ \text{Objective function is Zmax} = 420(L_1+L_2+L_3)+360(M_1+M_2+M_3)+300(S_1+S_2+S_3)$$
+$$ \text{Expanding the objective function Zmax}= 420L_1 + 360M_1 + 300S_1 + 420L_2 + 360M_2 + 300S_2 + 420L_3 + 360M_3 + 300S_3 $$
+subject to
+$$L_1+M_1+S_1\le750$$
+$$L_2+M_2+S_2\le900$$
+$$L_3+M_3+S_3\le450 $$
+$$20L_1+15M_1+12S_1\le13000$$
+$$20L_2+15M_2+12S_2\le12000$$
+$$20L_3+15M_3+12S_3\le5000$$
+$$L_1+L_2+L_3\le900$$
+$$M_1+M_2+M_3\le1200$$
+$$S_1+S_2+S_3\le750$$
+The non-negativity constraints
+$$L_1, L_2, L_3, M_1, M_2, M_3, S_1, S_2, S_3\ge0 $$
+**The above LP problem constraints can now be written as**
+$$L_1+M_1+S_1+0L_2+0M_2+0S_2+0L_3+0M_3+0S_3\le750$$
+$$0L_1+0M_1+0S_1+L_2+M_2+S_2+0L_3+0M_3+0S_3\le900$$
+$$0L_1+0M_1+0S_1+0L_2+0M_2+0S_2+L_3+M_3+S_3\le450$$
+$$20L_1+15M_1+12S_1+0L_2+0M_2+0S_2+0L_3+0M_3+0S_3\le13000$$
+$$0L_1+0M_1+0S_1+20L_2+15M_2+12S_2+0L_3+0M_3+0S_3\le12000$$
+$$0L_1+0M_1+0S_1+0L_2+0M_2+0S_2+20L_3+15M_3+12S_3\le5000$$
+$$L_1+0M_1+0S_1+L_2+0M_2+0S_2+L_3+0M_3+0S_3\le900$$
+$$0L_1+M_1+0S_1+0L_2+M_2+0S_2+0L_3+M_3+0S_3\le1200$$
+$$0L_1+0M_1+S_1+0L_2+0M_2+S_2+0L_3+0M_3+S_3\le750$$
+
+```{r}
+# Install and load the lpSolve library if not already installed
+if (!require(lpSolve)) {
+  install.packages("lpSolve")
+  library(lpSolve)
+}
+
+# Objective function coefficients (for all three plants)
+obj_coef <- rep(c(420, 360, 300), 3)
+
+# Constraints for storage space and production capacity
+const_coef <- rbind(
+  # Production capacity
+  c(1, 1, 1, 0, 0, 0, 0, 0, 0),
+  c(0, 0, 0, 1, 1, 1, 0, 0, 0),
+  c(0, 0, 0, 0, 0, 0, 1, 1, 1),
+  # Storage space
+  c(20, 15, 12, 0, 0, 0, 0, 0, 0),
+  c(0, 0, 0, 20, 15, 12, 0, 0, 0),
+  c(0, 0, 0, 0, 0, 0, 20, 15, 12)
+)
+
+# Right-hand side for storage space and production capacity constraints
+rhs_const <- c(750, 900, 450, 13000, 12000, 5000)
+
+# Add sales forecasts as constraints
+sales_forecast_constraints <- matrix(0, 3, 9)
+sales_forecast_constraints[1, c(1,4,7)] <- 1
+sales_forecast_constraints[2, c(2,5,8)] <- 1
+sales_forecast_constraints[3, c(3,6,9)] <- 1
+
+# Combine the constraints
+const_coef <- rbind(const_coef, sales_forecast_constraints)
+rhs_const <- c(rhs_const, c(900, 1200, 750))
+
+# Constraint directions (all are '<=')
+const_dir <- rep("<=", nrow(const_coef))
+
+# Solve the LP model
+lp_solution <- lp(direction = "max", objective.in = obj_coef, const.mat = const_coef, const.dir = const_dir, const.rhs = rhs_const, all.int = TRUE)
+
+# Print the solution
+print(lp_solution)
+
+# Extract solution values
+production_plan <- lp_solution$solution
+
+# Format and print the production plan for each plant
+for (plant in 1:3) {
+  start_idx <- (plant - 1) * 3 + 1
+  end_idx <- start_idx + 2
+  plant_production <- production_plan[start_idx:end_idx]
+  cat(sprintf("Plant %d:\n", plant))
+  cat(sprintf("  Large: %d units\n", plant_production[1]))
+  cat(sprintf("  Medium: %d units\n", plant_production[2]))
+  cat(sprintf("  Small: %d units\n\n", plant_production[3]))
+}
+
+
+```
+
+
+
